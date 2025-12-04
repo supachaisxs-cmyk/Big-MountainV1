@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Big Mountain 2025 — Showtime Selector (6 Dec)</title>
+
+<!-- html2canvas for download -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#0f1115;
+    --panel:#0f1720;
+    --muted:#9aa5b1;
+    --accent:#ff4da6;
+    --glass: rgba(255,255,255,0.04);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+    background: linear-gradient(180deg,#07111b 0%, #0b1520 100%);
+    color:#e6eef6;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{
+    max-width:1100px;
+    margin:18px auto;
+    padding:18px;
+  }
+
+  header {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    justify-content:space-between;
+    margin-bottom:14px;
+  }
+  h1{
+    font-size:20px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:0.2px;
+  }
+  .date-pill{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .pill{
+    background:var(--glass);
+    color:var(--muted);
+    padding:8px 12px;
+    border-radius:999px;
+    font-weight:600;
+    cursor:pointer;
+    font-size:13px;
+  }
+  .pill.active{
+    background:linear-gradient(90deg,var(--accent),#a244ff);
+    color:#0b0b0b;
+    box-shadow:0 6px 22px rgba(255,77,166,0.12),0 2px 6px rgba(0,0,0,0.5);
+  }
+
+  .main{
+    display:grid;
+    grid-template-columns: 1fr 320px;
+    gap:18px;
+  }
+
+  /* TIMELINE PANEL */
+  .timeline-panel{
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:14px;
+    padding:14px;
+    box-shadow: 0 6px 24px rgba(3,6,10,0.6);
+    overflow:hidden;
+  }
+
+  .time-header{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .time-range{
+    background:var(--panel);
+    padding:8px 12px;
+    border-radius:10px;
+    color:var(--muted);
+    font-weight:600;
+    font-size:14px;
+  }
+
+  /* horizontal scroll area */
+  .timeline-wrap{
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
+    padding-bottom:6px;
+  }
+
+  .timeline{
+    min-width:900px; /* can adjust if many columns */
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+  }
+
+  .time-column{
+    width:72px;
+    background:transparent;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+
+  .time-label{
+    height:56px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--muted);
+    font-weight:700;
+    font-size:13px;
+    border-radius:8px;
+    background:transparent;
+  }
+
+  .stages{
+    margin-top:12px;
+  }
+
+  /* stage row container (vertical) */
+  .stage-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+
+  .stage-name{
+    min-width:180px;
+    flex-shrink:0;
+    color:#cfe6ff;
+    font-weight:700;
+    font-size:14px;
+    padding:12px;
+    border-radius:10px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  }
+
+  /* artist chip */
+  .chip {
+    border-radius:20px;
+    padding:10px 12px;
+    min-width:140px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    justify-content:center;
+    color:#061019;
+    font-weight:700;
+    cursor:pointer;
+    transition: transform .12s, box-shadow .12s;
+    box-shadow: 0 3px 10px rgba(2,6,12,0.45);
+    white-space:nowrap;
+    font-size:13px;
+  }
+  .chip .meta{
+    font-weight:600;
+    color:rgba(0,0,0,0.6);
+    font-size:12px;
+  }
+
+  .chip:hover{ transform:translateY(-4px); }
+
+  /* colors per stage */
+  .stage-ferris .chip{ background:linear-gradient(90deg,#7fe3c4,#5bd0ff); }
+  .stage-block .chip{ background:linear-gradient(90deg,#ffb3c7,#ff7aa6); }
+  .stage-red .chip{ background:linear-gradient(90deg,#ffb06b,#ff7d4c); }
+  .stage-harn .chip{ background:linear-gradient(90deg,#ffd86a,#ffb36b); color:#111; }
+  .stage-district .chip{ background:linear-gradient(90deg,#8fd6ff,#6fa0ff); }
+  .stage-lang .chip{ background:linear-gradient(90deg,#ff9fb3,#e76fff); }
+  .stage-rum .chip{ background:linear-gradient(90deg,#caa8ff,#a8b6ff); color:#061019; }
+
+  .chip.selected{
+    outline:3px solid rgba(255,255,255,0.06);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.6), 0 0 18px rgba(255,255,255,0.03) inset;
+    transform:translateY(-6px) scale(1.02);
+  }
+
+  /* Selected list panel */
+  .summary {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    padding:14px;
+    border-radius:14px;
+    position:sticky;
+    top:18px;
+    height:fit-content;
+  }
+  .summary h3{ margin:0 0 8px 0; font-size:16px; color:#f2f7ff}
+  .sel-list{ display:flex; flex-direction:column; gap:8px; max-height:62vh; overflow:auto; padding-right:6px;}
+  .sel-item{
+    background:var(--glass);
+    padding:8px 10px;
+    border-radius:10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    color:var(--muted);
+    font-weight:700;
+  }
+  .sel-item .artist { color:#fff; font-weight:800 }
+  .summary .btn{
+    margin-top:12px;
+    display:block;
+    width:100%;
+    padding:12px;
+    border-radius:12px;
+    background:linear-gradient(90deg,var(--accent),#a244ff);
+    color:#08111a;
+    font-weight:800;
+    border:none;
+    cursor:pointer;
+    box-shadow:0 10px 26px rgba(162,68,255,0.12);
+  }
+
+  /* responsive */
+  @media (max-width:980px){
+    .main{ grid-template-columns:1fr; }
+    .summary{ position:relative; margin-top:12px; }
+    .timeline{ min-width:1200px; }
+  }
+
+  /* small helper */
+  .muted{ color:var(--muted); font-weight:600 }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Big Mountain 2025 — Showtime Selector</h1>
+    <div class="date-pill">
+      <div class="pill">6 ธ.ค. 2025</div>
+    </div>
+  </header>
+
+  <div class="main">
+    <!-- TIMELINE -->
+    <div class="timeline-panel" id="timelinePanel">
+      <div class="time-header">
+        <div class="time-range">เวลา: 13:00 — 24:00</div>
+        <div style="flex:1"></div>
+        <div class="muted">กดที่ชื่อวงเพื่อเพิ่มลงตารางส่วนตัว</div>
+      </div>
+
+      <div class="timeline-wrap" id="timelineWrap">
+        <div class="timeline" id="timeline">
+
+          <!-- Left column: times (fixed width column) -->
+          <div style="min-width:180px; display:flex; flex-direction:column; gap:8px;">
+            <div style="height:56px"></div>
+            <!-- stage label header placeholder -->
+            <div class="time-label" style="height:44px; font-weight:700; color:var(--muted)">เวลา</div>
+            <!-- times -->
+            <div class="time-column">
+              <div class="time-label">13:00</div>
+              <div class="time-label">14:00</div>
+              <div class="time-label">15:00</div>
+              <div class="time-label">16:00</div>
+              <div class="time-label">17:00</div>
+              <div class="time-label">18:00</div>
+              <div class="time-label">19:00</div>
+              <div class="time-label">20:00</div>
+              <div class="time-label">21:00</div>
+              <div class="time-label">22:00</div>
+              <div class="time-label">23:00</div>
+              <div class="time-label">24:00</div>
+            </div>
+          </div>
+
+          <!-- RIGHT: stages area (each stage is a vertical column of chips arranged to line up with times visually) -->
+          <div style="display:flex; flex-direction:column; gap:10px; min-width:720px;">
+
+            <!-- Stage: Ferris Wheel -->
+            <div class="stage-row stage-ferris">
+              <div class="stage-name">FERRIS WHEEL STAGE</div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+                <div class="chip stage-ferris" data-stage="Ferris Wheel" data-time="16:45-17:45" data-artist="SLOT MACHINE">
+                  <div style="text-align:center">
+                    <div style="font-size:13px; color:#061019">SLOT MACHINE</div>
+                    <div class="meta">16:45 — 17:45</div>
+                  </div>
+                </div>
+
+                <div class="chip stage-ferris" data-stage="Ferris Wheel" data-time="18:00-19:00" data-artist="LOMOSONIC">
+                  <div><div style="font-size:13px;color:#061019">LOMOSONIC</div><div class="meta">18:00 — 19:00</div></div>
+                </div>
+
+                <div class="chip stage-ferris" data-stage="Ferris Wheel" data-time="19:45-20:15" data-artist="BANK PREETI">
+                  <div><div style="font-size:13px;color:#061019">BANK PREETI</div><div class="meta">19:45 — 20:15</div></div>
+                </div>
+
+                <div class="chip stage-ferris" data-stage="Ferris Wheel" data-time="21:45-22:45" data-artist="POTATO">
+                  <div><div style="font-size:13px;color:#061019">POTATO</div><div class="meta">21:45 — 22:45</div></div>
+                </div>
+
+                <div class="chip stage-ferris" data-stage="Ferris Wheel" data-time="23:00-00:00" data-artist="BODYSLAM">
+                  <div><div style="font-size:13px;color:#061019">BODYSLAM</div><div class="meta">23:00 — 00:00</div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stage: Block Stage -->
+            <div class="stage-row stage-block">
+              <div class="stage-name">BLOCK STAGE</div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+                <div class="chip stage-block" data-stage="Block" data-time="16:15-17:00" data-artist="SAMUI">
+                  <div><div style="font-size:13px;color:#061019">SAMUI</div><div class="meta">16:15 — 17:00</div></div>
+                </div>
+                <div class="chip stage-block" data-stage="Block" data-time="17:15-17:45" data-artist="WOLF HOWL HARMONY (JP)">
+                  <div><div style="font-size:13px;color:#061019">WOLF HOWL HARMONY (JP)</div><div class="meta">17:15 — 17:45</div></div>
+                </div>
+                <div class="chip stage-block" data-stage="Block" data-time="18:00-18:30" data-artist="DIVA LA VIE">
+                  <div><div style="font-size:13px;color:#061019">DIVA LA VIE</div><div class="meta">18:00 — 18:30</div></div>
+                </div>
+                <div class="chip stage-block" data-stage="Block" data-time="18:45-19:45" data-artist="JAYLERR">
+                  <div><div style="font-size:13px;color:#061019">JAYLERR</div><div class="meta">18:45 — 19:45</div></div>
+                </div>
+                <div class="chip stage-block" data-stage="Block" data-time="20:15-20:45" data-artist="FOURTH">
+                  <div><div style="font-size:13px;color:#061019">FOURTH</div><div class="meta">20:15 — 20:45</div></div>
+                </div>
+                <div class="chip stage-block" data-stage="Block" data-time="21:00-21:45" data-artist="PROXIE">
+                  <div><div style="font-size:13px;color:#061019">PROXIE</div><div class="meta">21:00 — 21:45</div></div>
+                </div>
+                <div class="chip stage-block" data-stage="Block" data-time="22:00-22:45" data-artist="PERSES">
+                  <div><div style="font-size:13px;color:#061019">PERSES</div><div class="meta">22:00 — 22:45</div></div>
+                </div>
+                <div class="chip stage-block" data-stage="Block" data-time="23:15-23:55" data-artist="LYKN">
+                  <div><div style="font-size:13px;color:#061019">LYKN</div><div class="meta">23:15 — 23:55</div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stage: Red (Reo) -->
+            <div class="stage-row stage-red">
+              <div class="stage-name">RED (REO) STAGE</div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+                <div class="chip stage-red" data-stage="Red" data-time="16:10-16:55" data-artist="TILLY BIRDS">
+                  <div><div style="font-size:13px;color:#061019">TILLY BIRDS</div><div class="meta">16:10 — 16:55</div></div>
+                </div>
+                <div class="chip stage-red" data-stage="Red" data-time="17:10-17:55" data-artist="PUN">
+                  <div><div style="font-size:13px;color:#061019">PUN</div><div class="meta">17:10 — 17:55</div></div>
+                </div>
+                <div class="chip stage-red" data-stage="Red" data-time="18:10-18:55" data-artist="CHAMELEON LIME WHOOPIEPIE (JP)">
+                  <div><div style="font-size:13px;color:#061019">CHAMELEON LIME WHOOPIEPIE (JP)</div><div class="meta">18:10 — 18:55</div></div>
+                </div>
+                <div class="chip stage-red" data-stage="Red" data-time="19:10-19:55" data-artist="POLYCAT">
+                  <div><div style="font-size:13px;color:#061019">POLYCAT</div><div class="meta">19:10 — 19:55</div></div>
+                </div>
+                <div class="chip stage-red" data-stage="Red" data-time="20:10-20:55" data-artist="SCRUBB">
+                  <div><div style="font-size:13px;color:#061019">SCRUBB</div><div class="meta">20:10 — 20:55</div></div>
+                </div>
+                <div class="chip stage-red" data-stage="Red" data-time="21:10-21:55" data-artist="TATTOO COLOUR">
+                  <div><div style="font-size:13px;color:#061019">TATTOO COLOUR</div><div class="meta">21:10 — 21:55</div></div>
+                </div>
+                <div class="chip stage-red" data-stage="Red" data-time="22:10-22:55" data-artist="TIMETHAI">
+                  <div><div style="font-size:13px;color:#061019">TIMETHAI</div><div class="meta">22:10 — 22:55</div></div>
+                </div>
+                <div class="chip stage-red" data-stage="Red" data-time="23:10-23:55" data-artist="URBOYTJ">
+                  <div><div style="font-size:13px;color:#061019">URBOYTJ</div><div class="meta">23:10 — 23:55</div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stage: Harn Stage by Pepsi -->
+            <div class="stage-row stage-harn">
+              <div class="stage-name">HARN STAGE (BY PEPSI)</div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+                <div class="chip stage-harn" data-stage="Harn" data-time="13:00-13:45" data-artist="SERIOUS BACON">
+                  <div><div style="font-size:13px;color:#061019">SERIOUS BACON</div><div class="meta">13:00 — 13:45</div></div>
+                </div>
+                <div class="chip stage-harn" data-stage="Harn" data-time="14:15-15:00" data-artist="TRANCE EFFECT (IND)">
+                  <div><div style="font-size:13px;color:#061019">TRANCE EFFECT (IND)</div><div class="meta">14:15 — 15:00</div></div>
+                </div>
+                <div class="chip stage-harn" data-stage="Harn" data-time="15:30-16:15" data-artist="GUNCHARLIE">
+                  <div><div style="font-size:13px;color:#061019">GUNCHARLIE</div><div class="meta">15:30 — 16:15</div></div>
+                </div>
+                <div class="chip stage-harn" data-stage="Harn" data-time="18:00-18:45" data-artist="JAMES ALYN">
+                  <div><div style="font-size:13px;color:#061019">JAMES ALYN</div><div class="meta">18:00 — 18:45</div></div>
+                </div>
+                <div class="chip stage-harn" data-stage="Harn" data-time="19:15-20:00" data-artist="WHAL & DOLPH">
+                  <div><div style="font-size:13px;color:#061019">WHAL & DOLPH</div><div class="meta">19:15 — 20:00</div></div>
+                </div>
+                <div class="chip stage-harn" data-stage="Harn" data-time="20:30-21:15" data-artist="MIRRR">
+                  <div><div style="font-size:13px;color:#061019">MIRRR</div><div class="meta">20:30 — 21:15</div></div>
+                </div>
+                <div class="chip stage-harn" data-stage="Harn" data-time="21:45-22:30" data-artist="SAFEPLANET">
+                  <div><div style="font-size:13px;color:#061019">SAFEPLANET</div><div class="meta">21:45 — 22:30</div></div>
+                </div>
+                <div class="chip stage-harn" data-stage="Harn" data-time="23:00-23:45" data-artist="PARADOX">
+                  <div><div style="font-size:13px;color:#061019">PARADOX</div><div class="meta">23:00 — 23:45</div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stage: District's Jail Stage -->
+            <div class="stage-row stage-district">
+              <div class="stage-name">DISTRICT'S JAIL STAGE</div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+                <div class="chip stage-district" data-stage="District" data-time="13:00-13:45" data-artist="TAITOSMITH">
+                  <div><div style="font-size:13px;color:#061019">TAITOSMITH</div><div class="meta">13:00 — 13:45</div></div>
+                </div>
+                <div class="chip stage-district" data-stage="District" data-time="14:15-15:15" data-artist="GANDHARVA">
+                  <div><div style="font-size:13px;color:#061019">GANDHARVA</div><div class="meta">14:15 — 15:15</div></div>
+                </div>
+                <div class="chip stage-district" data-stage="District" data-time="15:45-16:30" data-artist="วิจิตรชน">
+                  <div><div style="font-size:13px;color:#061019">วิจิตรชน</div><div class="meta">15:45 — 16:30</div></div>
+                </div>
+                <div class="chip stage-district" data-stage="District" data-time="17:00-17:45" data-artist="RÉJIZZ">
+                  <div><div style="font-size:13px;color:#061019">RÉJIZZ</div><div class="meta">17:00 — 17:45</div></div>
+                </div>
+                <div class="chip stage-district" data-stage="District" data-time="18:15-19:00" data-artist="H3F">
+                  <div><div style="font-size:13px;color:#061019">H3F</div><div class="meta">18:15 — 19:00</div></div>
+                </div>
+                <div class="chip stage-district" data-stage="District" data-time="19:30-20:15" data-artist="DESKTOP ERROR">
+                  <div><div style="font-size:13px;color:#061019">DESKTOP ERROR</div><div class="meta">19:30 — 20:15</div></div>
+                </div>
+                <div class="chip stage-district" data-stage="District" data-time="20:45-21:30" data-artist="HUGO">
+                  <div><div style="font-size:13px;color:#061019">HUGO</div><div class="meta">20:45 — 21:30</div></div>
+                </div>
+                <div class="chip stage-district" data-stage="District" data-time="22:00-22:45" data-artist="SRIRAJAH ROCHERS">
+                  <div><div style="font-size:13px;color:#061019">SRIRAJAH ROCHERS</div><div class="meta">22:00 — 22:45</div></div>
+                </div>
+                <div class="chip stage-district" data-stage="District" data-time="23:15-00:00" data-artist="สามานย์">
+                  <div><div style="font-size:13px;color:#061019">สามานย์</div><div class="meta">23:15 — 00:00</div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stage: Langkadang Stage -->
+            <div class="stage-row stage-lang">
+              <div class="stage-name">LANGKADARENG STAGE</div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+                <div class="chip stage-lang" data-stage="Lang" data-time="15:00-15:30" data-artist="YES INDEED">
+                  <div><div style="font-size:13px;color:#061019">YES INDEED</div><div class="meta">15:00 — 15:30</div></div>
+                </div>
+                <div class="chip stage-lang" data-stage="Lang" data-time="16:00-16:45" data-artist="ROOFTOP">
+                  <div><div style="font-size:13px;color:#061019">ROOFTOP</div><div class="meta">16:00 — 16:45</div></div>
+                </div>
+                <div class="chip stage-lang" data-stage="Lang" data-time="17:15-18:00" data-artist="DE FLAMINGO">
+                  <div><div style="font-size:13px;color:#061019">DE FLAMINGO</div><div class="meta">17:15 — 18:00</div></div>
+                </div>
+                <div class="chip stage-lang" data-stage="Lang" data-time="18:30-19:15" data-artist="มานพ">
+                  <div><div style="font-size:13px;color:#061019">มานพ</div><div class="meta">18:30 — 19:15</div></div>
+                </div>
+                <div class="chip stage-lang" data-stage="Lang" data-time="19:45-20:30" data-artist="แพร ชนา">
+                  <div><div style="font-size:13px;color:#061019">แพร ชนา</div><div class="meta">19:45 — 20:30</div></div>
+                </div>
+                <div class="chip stage-lang" data-stage="Lang" data-time="21:00-21:45" data-artist="เล็ก รัชนศ์">
+                  <div><div style="font-size:13px;color:#061019">เล็ก รัชนศ์</div><div class="meta">21:00 — 21:45</div></div>
+                </div>
+                <div class="chip stage-lang" data-stage="Lang" data-time="22:15-23:00" data-artist="มนัสสวี">
+                  <div><div style="font-size:13px;color:#061019">มนัสสวี</div><div class="meta">22:15 — 23:00</div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stage: Rumwong Bar -->
+            <div class="stage-row stage-rum">
+              <div class="stage-name">RUMWONG BAR x ระเบียบวาทะศิลป์</div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+                <div class="chip stage-rum" data-stage="Rumwong" data-time="16:00-18:00" data-artist="ระเบียบวาทะศิลป์">
+                  <div><div style="font-size:13px;color:#061019">ระเบียบวาทะศิลป์</div><div class="meta">16:00 — 18:00</div></div>
+                </div>
+                <!-- You can add more chips here for rumwong bar times if needed -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SUMMARY PANEL -->
+    <aside class="summary" id="summaryPanel">
+      <h3>ตารางส่วนตัวของคุณ</h3>
+      <div class="muted" style="font-size:13px; margin-bottom:8px">วงที่เลือก (วันที่ 6 ธ.ค.)</div>
+
+      <div class="sel-list" id="selList">
+        <div class="muted">ยังไม่มีการเลือก</div>
+      </div>
+
+      <button class="btn" id="downloadBtn">ดาวน์โหลดรูปสรุป</button>
+
+      <div style="margin-top:8px; font-size:12px; color:var(--muted)">
+        • แตะที่วงเพื่อเพิ่ม/ยกเลิก • ปรับแต่งได้แล้วดาวน์โหลดเป็นภาพ PNG
+      </div>
+    </aside>
+
+  </div>
+
+</div>
+
+<script>
+  // Interaction logic
+  const chips = document.querySelectorAll('.chip');
+  const selList = document.getElementById('selList');
+  const downloadBtn = document.getElementById('downloadBtn');
+
+  // store selections as array of objects
+  let selections = [];
+
+  function renderSelections(){
+    selList.innerHTML = '';
+    if(selections.length === 0){
+      const p = document.createElement('div');
+      p.className = 'muted';
+      p.textContent = 'ยังไม่มีการเลือก';
+      selList.appendChild(p);
+      return;
+    }
+    selections.forEach((s, i) => {
+      const div = document.createElement('div');
+      div.className = 'sel-item';
+      div.innerHTML = `<div>
+          <div class="artist">${s.artist}</div>
+          <div style="font-size:12px;color:var(--muted)">${s.time} — ${s.stage}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button style="background:transparent;border:0;color:var(--muted);cursor:pointer" data-remove="${i}">ลบ</button>
+        </div>`;
+      selList.appendChild(div);
+    });
+  }
+
+  function toggleChip(el){
+    const artist = el.dataset.artist;
+    const time = el.dataset.time;
+    const stage = el.dataset.stage;
+    // find if exists
+    const idx = selections.findIndex(s => s.artist === artist && s.time === time && s.stage === stage);
+    if(idx >= 0){
+      // remove
+      selections.splice(idx,1);
+      el.classList.remove('selected');
+    } else {
+      selections.push({artist, time, stage});
+      el.classList.add('selected');
+    }
+    renderSelections();
+  }
+
+  chips.forEach(c => {
+    c.addEventListener('click', () => toggleChip(c));
+  });
+
+  selList.addEventListener('click', (e) => {
+    const rem = e.target.getAttribute('data-remove');
+    if(rem !== null){
+      const idx = parseInt(rem,10);
+      const item = selections[idx];
+      // find corresponding chip and unselect
+      const target = Array.from(chips).find(ch => ch.dataset.artist===item.artist && ch.dataset.time===item.time && ch.dataset.stage===item.stage);
+      if(target) target.classList.remove('selected');
+      selections.splice(idx,1);
+      renderSelections();
+    }
+  });
+
+  // Download summary image using html2canvas
+  downloadBtn.addEventListener('click', async () => {
+    if(selections.length === 0){
+      alert('ยังไม่ได้เลือกวงใด ๆ ครับ');
+      return;
+    }
+
+    // build a temporary summary element to snapshot (clean layout)
+    const tmp = document.createElement('div');
+    tmp.style.width = '1000px';
+    tmp.style.padding = '20px';
+    tmp.style.background = '#08111a';
+    tmp.style.color = '#ffffff';
+    tmp.style.borderRadius = '12px';
+    tmp.style.fontFamily = 'Inter, Arial, sans-serif';
+    tmp.innerHTML = `<h2 style="margin:0 0 12px 0">My BMMF Schedule — 6 ธ.ค. 2025</h2>`;
+    const list = document.createElement('div');
+    list.style.display = 'flex';
+    list.style.flexDirection = 'column';
+    list.style.gap = '8px';
+
+    // sort selections by time start if possible
+    function parseStart(t){
+      // t like "16:45-17:45" or "23:15-23:55"
+      const raw = t.split('-')[0];
+      const [hh,mm] = raw.split(':').map(x=>parseInt(x,10));
+      return hh*60+ (mm||0);
+    }
+    const sorted = [...selections].sort((a,b)=>parseStart(a.time) - parseStart(b.time));
+
+    sorted.forEach(s => {
+      const r = document.createElement('div');
+      r.style.display='flex';
+      r.style.justifyContent='space-between';
+      r.style.alignItems='center';
+      r.style.padding='8px';
+      r.style.borderRadius='8px';
+      r.style.background='rgba(255,255,255,0.03)';
+      r.innerHTML = `<div style="font-weight:800">${s.artist}</div>
+                     <div style="text-align:right;color:#cfe6ff">${s.time} • ${s.stage}</div>`;
+      list.appendChild(r);
+    });
+
+    tmp.appendChild(list);
+    document.body.appendChild(tmp); // must be in DOM for html2canvas
+
+    // wait for fonts/render
+    await new Promise(r=>setTimeout(r,250));
+
+    html2canvas(tmp, {scale:2, backgroundColor: null}).then(canvas => {
+      const url = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'BMMF2025_my_schedule_6Dec.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      tmp.remove();
+    }).catch(err => {
+      tmp.remove();
+      alert('เกิดข้อผิดพลาดตอนสร้างรูป: '+err.message);
+    });
+  });
+
+  // initial render
+  renderSelections();
+
+</script>
+</body>
+</html>
